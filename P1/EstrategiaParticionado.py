@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABCMeta,abstractmethod
 import random
+import numpy
 class Particion():
 
 	# Esta clase mantiene la lista de índices de Train y Test para cada partición del conjunto de particiones  
@@ -61,8 +62,7 @@ class ValidacionCruzada(EstrategiaParticionado):
 	
 
 	def __init__(self,numFolds,datos,seed=None):
-		super().__init__("Validacion simple",numeroParticiones,datos)
-		self.numFolds = numFolds
+		super(ValidacionCruzada,self).__init__("Validacion simple",numFolds,datos)
 
 	# Crea particiones segun el metodo de validacion cruzada.
 	# El conjunto de entrenamiento se crea con las nfolds-1 particiones y el de test con la particion restante
@@ -73,10 +73,18 @@ class ValidacionCruzada(EstrategiaParticionado):
 		particiones = []
 		ntot = len(datos)
 		x = list(range(ntot))
-		n = floor(ntot/self.numFolds)
-		for i in range((self.numFolds)):
-			p = Particion(x[n*i:n*(i+1)],x[:n*i]+x[(n*i)+1:])
-			particiones.append(p)
+		n = int(numpy.floor(ntot/self.numeroParticiones))
+		r = ntot%self.numeroParticiones
+		print datos
+		for i in range((self.numeroParticiones)):
+			print n*(i+1)+2,n*i
+			if r !=0:
+				p = Particion(x[n*i:n*(i+1)+1], x[:n*i]+x[(n*(i+1))+1:])
+				particiones.append(p)
+			else:
+				p = Particion(x[n*i:n*(i+1)], x[:n*i]+x[(n*(i+1)):])
+				particiones.append(p)
+			r = r-1
 		return particiones
 		pass
 		
