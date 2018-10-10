@@ -1,7 +1,6 @@
 from Datos import Datos
-from EstrategiaParticionado import EstrategiaParticionado
-from ValidacionSimple import ValidacionSimple
-from Particion import Particion
+from EstrategiaParticionado-plantilla import *
+
 dataset=Datos('../balloons.data')
 estrategia = ValidacionSimple(1,0.4,dataset)
 estrategia.creaParticiones()
