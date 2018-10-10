@@ -1,9 +1,11 @@
 from Datos import Datos
-from EstrategiaParticionado-plantilla import *
+from EstrategiaParticionado import *
 
-dataset=Datos('../balloons.data')
+dataset=Datos('balloons.data')
 estrategia = ValidacionSimple(1,0.4,dataset)
-estrategia.creaParticiones()
-for x in estrategia.particiones:
+particiones = estrategia.creaParticiones(dataset.datos)
+for x in particiones:
 	print(dataset.extraeDatos(x.indicesTest))
 	print(dataset.extraeDatos(x.indicesTrain))
+
+estrategia1 = ValidacionCruzada(1,0.4,dataset)
