@@ -1,11 +1,7 @@
 # -*- coding: utf-8 -*-
 from abc import ABCMeta,abstractmethod
 import random
-<<<<<<< HEAD
 import numpy as np
-=======
-import numpy
->>>>>>> 005cdcbd82dff1636916890c6b80e923cb61c5f6
 class Particion():
 
 	# Esta clase mantiene la lista de índices de Train y Test para cada partición del conjunto de particiones  
@@ -67,10 +63,7 @@ class ValidacionCruzada(EstrategiaParticionado):
 
 	def __init__(self,numFolds,datos,seed=None):
 
-		super().__init__("Validacion simple",numFolds)
-		self.numFolds = numFolds
-
-		super(ValidacionCruzada,self).__init__("Validacion simple",numFolds,datos)
+		super(ValidacionCruzada,self).__init__("Validacion cruzada",numFolds,datos)
 
 
 	# Crea particiones segun el metodo de validacion cruzada.
@@ -82,11 +75,11 @@ class ValidacionCruzada(EstrategiaParticionado):
 		particiones = []
 		ntot = len(datos)
 		x = list(range(ntot))
-		n = int(numpy.floor(ntot/self.numeroParticiones))
+		n = int(np.floor(ntot/self.numeroParticiones))
 		r = ntot%self.numeroParticiones
-		print datos
+
 		for i in range((self.numeroParticiones)):
-			print n*(i+1)+2,n*i
+
 			if r !=0:
 				p = Particion(x[n*i:n*(i+1)+1], x[:n*i]+x[(n*(i+1))+1:])
 				particiones.append(p)
@@ -104,7 +97,6 @@ class ValidacionBootstrap(EstrategiaParticionado):
 
 	def __init__(self,numFolds,datos,seed=None):
 		super().__init__("Validacion simple",numFolds)
-		self.tamano = datos
 	# Crea particiones segun el metodo de validacion por bootstrap.
 	# Esta funcion devuelve una lista de particiones (clase Particion)
 	# TODO: implementar
@@ -113,7 +105,7 @@ class ValidacionBootstrap(EstrategiaParticionado):
 		l = len(datos)
 		particiones = []
 		for i in range(self.numeroParticiones):
-			p1 = list(set(np.random.randint(l,size=self.tamano)))
+			p1 = list(set(np.random.randint(l,size=l)))
 			ints = [i for i in range(l) if i not in p1]
 			particiones.append(Particion(p1,ints))
 		return particiones
