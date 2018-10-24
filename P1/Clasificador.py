@@ -77,7 +77,7 @@ class ClasificadorNaiveBayes(Clasificador):
     #Miramos si hay algun 0 en alguna tabla, si lo hay añadimos 1 a todo
 
     if laplace :
-      for i in range(c-1):
+      for i in range(c):
         if 0 in self.tablas[i] and atributosDiscretos[i]:
           #print( self.tablas[i])
           self.tablas[i] =  self.tablas[i]+1
@@ -97,18 +97,27 @@ class ClasificadorNaiveBayes(Clasificador):
     l = len(hipotesis)
     clasificacion = []
     for i in range(f):
-      p = np.ones((1,l))
+      p = np.ones(l)#probabilidades de cada hipotesis
       for h in range(l):
-        for j in range(c-2):
+        if(sum(self.tablas[0][:,h]) == 0):
+          p[h] = 0
+          continue;
+
+        for j in range(c-1):
           if(atributosDiscretos[j]):
-            p[0,h] = p[0,h] * self.tablas[j][int(datostest[i,j]),h]/sum(self.tablas[j][:,h])
+            p[h] = p[h] * self.tablas[j][int(datostest[i,j]),h]/sum(self.tablas[j][:,h])#Hacemos los a posteriori
           else:
-            p[0,h] = p[0,h] * norm.pdf(datostest[i,j], loc = self.tablas[j][0,h],scale = self.tablas[j][1,h])
+            p[h] = p[h] * norm.pdf(datostest[i,j], loc = self.tablas[j][0,h],scale = self.tablas[j][1,h])
         #print(self.tablas[-1][h,h]/sum(sum(self.tablas[-1])))
-        p[0,h] =  p[0,h] * self.tablas[-1][h,h]/sum(sum(self.tablas[-1]))
-      #print(p,np.max(p),np.where(p == np.max(p)))
-      clasificacion.append(np.where(p == np.max(p))[1][0])
-    
+        p[h] =  p[h] * self.tablas[-1][h,h]/sum(sum(self.tablas[-1]))
+      #print(p)
+      if(len(np.where(p == np.max(p))[0]) == 0):
+        print(datostest)
+        print(self.tablas)
+      #print(np.where(p == np.max(p)))
+      #print(np.where(p == np.max(p)))
+      clasificacion.append(np.where(p == np.max(p))[0][0])
+      #print(clasificacion)
     return clasificacion
 
 

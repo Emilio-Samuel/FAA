@@ -10,9 +10,9 @@ class Particion():
 		self.indicesTest=[]
 
 	def __init__(self,indicesTrain,indicesTest):
-		self.indicesTest = indicesTest
 		self.indicesTrain = indicesTrain
-
+		self.indicesTest = indicesTest
+		
 #####################################################################################################
 
 class EstrategiaParticionado(object):
