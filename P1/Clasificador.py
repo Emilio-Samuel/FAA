@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 from abc import ABCMeta,abstractmethod
 import numpy as np
 from  scipy.stats import norm 
@@ -30,8 +31,19 @@ class Clasificador(object):
   def error(datos,pred):
     # Aqui se compara la prediccion (pred) con las clases reales y se calcula el error    
   	return sum(pred != datos[:,-1])/len(pred)
-    
-    
+
+  # Obtiene el numero de falsos positivos yls falsos negativos para calcular la matriz de confusion
+  # TODO: implementar
+  @staticmethod
+  def matrizConfusion(datos,pred,clasePositiva):
+    # Aqui se compara la prediccion (pred) con las clases reales y se calcula la matriz de confusion
+    comparaciones = zip(datos,pred)
+    tp = sum([(x[-1] == clasePositiva) and (y == clasePositiva) for x,y in comparaciones])
+    fp = sum([(x[-1] == clasePositiva) and (y != clasePositiva) for x,y in comparaciones])
+    tn = sum([(x[-1] != clasePositiva) and (y != clasePositiva) for x,y in comparaciones])
+    fn = sum([(x[-1] != clasePositiva) and (y == clasePositiva) for x,y in comparaciones])
+    return [[tp/(tp+fn), fp/(tn+fp)],[fn/(tp+fn), tn/(tn+fp)]]
+
   # Realiza una clasificacion utilizando una estrategia de particionado determinada
   # TODO: implementar esta funcion
   def validacion(self,particionado,dataset,clasificador,seed=None):
