@@ -108,20 +108,16 @@ class ClasificadorNaiveBayes(Clasificador):
             p[h] = p[h] * self.tablas[j][int(datostest[i,j]),h]/sum(self.tablas[j][:,h])#Hacemos los a posteriori
           else:
             p[h] = p[h] * norm.pdf(datostest[i,j], loc = self.tablas[j][0,h],scale = self.tablas[j][1,h])
-        #print(self.tablas[-1][h,h]/sum(sum(self.tablas[-1])))
+
         p[h] =  p[h] * self.tablas[-1][h,h]/sum(sum(self.tablas[-1]))
-      #print(p)
-      if(len(np.where(p == np.max(p))[0]) == 0):
-        print(datostest)
-        print(self.tablas)
-      #print(np.where(p == np.max(p)))
-      #print(np.where(p == np.max(p)))
+    
       clasificacion.append(np.where(p == np.max(p))[0][0])
-      #print(clasificacion)
     return clasificacion
 
-
-
-    
-
-  
+    def validacion(self,particionado,dataset,clasificador,seed=None):
+      particiones = particionado.creaParticiones(dataset.datos)  
+      for x in particiones:
+        datosTrain = dataset.extraeDatos(x.indicesTrain)
+        datosTest = dataset.extraeDatos(x.indicesTest)
+        self.entrenamiento(datosTrain,dataset.nominalAtributos,dataset.diccionarios)  
+      self.clasifica(datosTest,dataset.nominalAtributos,dataset.diccionarios)
