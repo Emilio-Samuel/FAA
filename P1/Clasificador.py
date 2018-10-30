@@ -1,6 +1,8 @@
+# -*- coding: utf8 -*-
 from abc import ABCMeta,abstractmethod
 import numpy as np
 from  scipy.stats import norm 
+import matplotlib.pyplot as plt
 class Clasificador(object):
   
   # Clase abstracta
@@ -30,8 +32,23 @@ class Clasificador(object):
   def error(datos,pred):
     # Aqui se compara la prediccion (pred) con las clases reales y se calcula el error    
   	return sum(pred != datos[:,-1])/len(pred)
-    
-    
+
+  # Obtiene el numero de falsos positivos yls falsos negativos para calcular la matriz de confusion
+  # TODO: implementar
+  @staticmethod
+  def matrizConfusion(datos,pred,clasePositiva):
+    #print(clasePositiva)
+    # Aqui se compara la prediccion (pred) con las clases reales y se calcula la matriz de confusion
+
+    tp = sum([(x[0] == clasePositiva and x[1] == clasePositiva) for x in  zip(datos[:,-1],pred)])
+    fp = sum([(x[1] == clasePositiva and x[0] != clasePositiva) for x in  zip(datos[:,-1],pred)])
+    tn = sum([(x != clasePositiva and y != clasePositiva) for x,y in  zip(datos[:,-1],pred)])
+    fn = sum([(x == clasePositiva and y != clasePositiva) for x,y in  zip(datos[:,-1],pred)])
+    #print("Valores",tp,fp,tn,fn)
+    TPR = 0 if tp == 0 else tp/(tp+fn)
+    FPR = 0 if fp == 0 else fp/(tn+fp)
+    return [[TPR, FPR],[fn/(tp+fn), tn/(tn+fp)]]
+
   # Realiza una clasificacion utilizando una estrategia de particionado determinada
   # TODO: implementar esta funcion
   def validacion(self,particionado,dataset,clasificador,seed=None):
@@ -42,8 +59,26 @@ class Clasificador(object):
     # - Para validacion simple (hold-out): entrenamos el clasificador con la particion de train
     # y obtenemos el error en la particion test
     pass
-       
-  
+  def Curva_roc(self, datostest,atributosDiscretos,diccionario):
+    probs = self.clasifica(datostest,atributosDiscretos,diccionario, True)
+    valores = np.copy(probs)
+    valores.sort()
+    TPR = [0]
+    FPR = [0]
+    for i in valores:
+      clasificacion = probs < i
+      #print("\n",clasificacion)
+
+      matriz = Clasificador.matrizConfusion(datostest,clasificacion,True)
+      #print(matriz)
+      TPR.append(matriz[0][0])
+      FPR.append(matriz[0][1])
+    #print(TPR,FPR)
+    TPR.append(1)
+    FPR.append(1)
+    return TPR,FPR
+
+
 ##############################################################################
 
 class ClasificadorNaiveBayes(Clasificador):
@@ -90,12 +125,13 @@ class ClasificadorNaiveBayes(Clasificador):
           self.tablas[j][1,h] = np.std(continuos[j])
 
   # TODO: implementar
-  def clasifica(self,datostest,atributosDiscretos,diccionario):
+  def clasifica(self,datostest,atributosDiscretos,diccionario,prob = False):
 
     [f,c] = datostest.shape
     hipotesis = diccionario[-1]
     l = len(hipotesis)
     clasificacion = []
+    probs = np.zeros(f)
     for i in range(f):
       p = np.ones(l)#probabilidades de cada hipotesis
       for h in range(l):
@@ -112,12 +148,16 @@ class ClasificadorNaiveBayes(Clasificador):
         p[h] =  p[h] * self.tablas[-1][h,h]/sum(sum(self.tablas[-1]))
     
       clasificacion.append(np.where(p == np.max(p))[0][0])
+      probs[i] = p[0]/np.sum(p)
+    if prob:
+      return probs
     return clasificacion
 
-    def validacion(self,particionado,dataset,clasificador,seed=None):
-      particiones = particionado.creaParticiones(dataset.datos)  
-      for x in particiones:
-        datosTrain = dataset.extraeDatos(x.indicesTrain)
-        datosTest = dataset.extraeDatos(x.indicesTest)
-        self.entrenamiento(datosTrain,dataset.nominalAtributos,dataset.diccionarios)  
+
+  def validacion(self,particionado,dataset,clasificador,seed=None):
+    particiones = particionado.creaParticiones(dataset.datos)  
+    for x in particiones:
+      datosTrain = dataset.extraeDatos(x.indicesTrain)
+      datosTest = dataset.extraeDatos(x.indicesTest)
+      self.entrenamiento(datosTrain,dataset.nominalAtributos,dataset.diccionarios)  
       self.clasifica(datosTest,dataset.nominalAtributos,dataset.diccionarios)

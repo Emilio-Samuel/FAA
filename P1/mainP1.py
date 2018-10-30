@@ -6,7 +6,9 @@ from sklearn import preprocessing
 from sklearn.naive_bayes import GaussianNB,MultinomialNB
 from sklearn.model_selection import train_test_split,cross_val_score
 from sklearn import datasets, linear_model
+import matplotlib.pyplot as plt
 import warnings
+
 warnings.filterwarnings("ignore")
 
 #Programa para probar el funcionamiento del codigo completo
@@ -28,6 +30,8 @@ for z in range(3):
 	erroresSkN = [[],[],[]]
 	erroresSkGT = [[],[],[]]
 	erroresSkNT = [[],[],[]]
+	stdL = []
+	stdN = []
 	estrategias = ["ValidacionSimple","ValidacionCruzada","ValidacionBootstrap"]
 	print("Iteracion \tError Laplace \t Error sin Laplace \t ErrorSklearn(Validacion Simple Validacion Cruzada) (Gausian Multinomial)\n")
 	#Procesamiento de los datos para comparar con paquete sklearn
@@ -41,6 +45,7 @@ for z in range(3):
 
 	for i in range(3):
 		print(estrategias[i])
+		
 
 		particion = estrategia[int(i+z*3)].creaParticiones(dataset.datos)	
 		j = 0
@@ -53,6 +58,7 @@ for z in range(3):
 			cnv.entrenamiento(datosTrain,dataset.nominalAtributos,dataset.diccionarios)
 			NL = cnv.clasifica(datosTest,dataset.nominalAtributos,dataset.diccionarios)
 			
+  		
 			cnvL = ClasificadorNaiveBayes()
 			cnvL.entrenamiento(datosTrain,dataset.nominalAtributos,dataset.diccionarios, True)
 
@@ -95,7 +101,19 @@ for z in range(3):
 		mediaSkN = np.median(erroresSkN[i])
 		mediaSkT = np.median(erroresSkGT[i])
 		mediaSkNT = np.median(erroresSkNT[i])
+		stdL.append(np.std(erroresL[i]))
+		stdN.append(np.std(erroresNV[i]))
 		print("\t{l}\t{nl}\t{e}\t{e1}\t{e2}\t{e3}\n".format(l = mediaL, nl = mediaNv,e = mediaSk,e1=mediaSkN,e2 = mediaSkT,e3 = mediaSkNT))
+		print("Desviaciones tipicas:\n (Con correccion de Laplace) {l} (Sin correccion de Laplace) {nl}".format(l = stdL[-1], nl =stdN[-1]))
+
+
+	n1 = np.mean(stdL)
+	n2 = np.mean(stdN)
+
+	print("Desviaciones tipicas medias::\n (Con correccion de Laplace) {l} (Sin correccion de Laplace){nl}".format(l = n1, nl = n2))
+
+
+
 #estrategia1 = ValidacionBootstrap(1,20,dataset)
 #particiones = estrategia1.creaParticiones(dataset.datos)
 #for x in particiones:
