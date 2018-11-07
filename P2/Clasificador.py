@@ -4,6 +4,7 @@ import numpy as np
 from  scipy.stats import norm 
 import matplotlib.pyplot as plt
 import scipy
+from scipy import stats
 class Clasificador(object):
   
   # Clase abstracta
@@ -170,35 +171,38 @@ class ClasificadorVecinosProximos(Clasificador):
     self.datosTrain = datostrain
     if not Normalizar:
       return
-    self.datostrain = (self.datostrain - np.mean(self.datostrain,0))/np.std(self.datostrain,0)
+    self.datosTrain = (datostrain - np.mean(datostrain,0))/np.std(datostrain,0)
     return
   def clasifica(self,datostest,atributosDiscretos,diccionario,prob = False,K = 5,Normalizar = False):
     #Suponemos que datostest viene normalizado si no  
     datostestNorm = np.copy(datostest)
     if Normalizar:
       datostestNorm =  (datostestNorm - np.mean(datostestNorm,0))/np.std(datostestNorm,0)
-    dists = [scipy.spatial.distance.euclidean(self.datosTrain[i,0:-1],datostestNorm[i,0:-1]) for i in range(len(datostest))]
-    minimos = np.ones(K)
-    minimos *= float('inf')
-    clases = np.ones(K)
-
+    dists = np.empty((len(datostestNorm),len(self.datosTrain)))
+    for i in range(len(datostestNorm)):
+      for j in range(len(self.datosTrain)):
+        dists[i,j] = scipy.spatial.distance.euclidean(self.datosTrain[j,0:-1],datostestNorm[i,0:-1])
+    #dists = [scipy.spatial.distance.euclidean(self.datosTrain[i,0:-1],datostestNorm[:,0:-1]) for i in range(len(self.datosTrain))]
+    #print(dists)
+    res = np.empty(len(datostest))
+    if prob:
+      probs = np.empty((len(diccionario[-1]),len(datostest)))
     for i in range(len(datostest)):
-      isMin = minimos < dists
-      if isMin.any():
-        pos = np.where(isMin == True)[0][0]
-        minimos[pos] = dists[i]
-        clases[pos] = datostest[i,-1]
-    if probs:
-      return sum(clases == 0)/K
-    clase = 0
-    prob = 0
-    for h in diccionario[-1]:
-      print(h)
-      probaux = sum(clases == h)/K
-      if prob < probaux:
-        prob = probaux
-        clase = h
-    return clase
+      minimos = np.ones(K)
+      minimos *= float('inf')
+      clases = np.ones(K)
+      for j in range(len(self.datosTrain)):
+        isMin = minimos > dists[i,j]
+        if isMin.any():
+          pos = np.where(isMin == True)[0][0]
+          minimos[pos] = dists[i,j]
+          clases[pos] = datostest[i,-1]
+      
+      res[i] = stats.mode(clases)[0][0]   
+      if prob:
+        for h in range(len(diccionario[-1])):
+          probs[h,i] = sum(h == clases)/K
+    return res
 
   def validacion(self,particionado,dataset,clasificador,seed=None):
     particiones = particionado.creaParticiones(dataset.datos) 
