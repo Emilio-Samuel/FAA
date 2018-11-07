@@ -80,6 +80,12 @@ class Clasificador(object):
     FPR.append(1)
     return TPR,FPR
 
+  def calcularMediasDesv(self,datostrain):
+    return  (np.mean(datostrain,0) , np.std(datostrain,0))
+
+  def normalizarDatos(self,datos):
+    (mean,std) = self.calcularMediasDesv(datos)  
+    return (datos - mean)/std
 
 ##############################################################################
 
@@ -171,13 +177,13 @@ class ClasificadorVecinosProximos(Clasificador):
     self.datosTrain = datostrain
     if not Normalizar:
       return
-    self.datosTrain = (datostrain - np.mean(datostrain,0))/np.std(datostrain,0)
+    self.datosTrain = self.normalizarDatos(datostrain)
     return
-  def clasifica(self,datostest,atributosDiscretos,diccionario,prob = False,K = 5,Normalizar = False):
+  def clasifica(self,datostest,atributosDiscretos,diccionario,prob = False,K = 5,Normalizar = True):
     #Suponemos que datostest viene normalizado si no  
     datostestNorm = np.copy(datostest)
     if Normalizar:
-      datostestNorm =  (datostestNorm - np.mean(datostestNorm,0))/np.std(datostestNorm,0)
+      datostestNorm = self.normalizarDatos(datostestNorm)
     dists = np.empty((len(datostestNorm),len(self.datosTrain)))
     for i in range(len(datostestNorm)):
       for j in range(len(self.datosTrain)):
