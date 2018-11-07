@@ -220,3 +220,34 @@ class ClasificadorVecinosProximos(Clasificador):
       clasificacion = self.clasifica(datosTest,dataset.nominalAtributos,dataset.diccionarios)
       errores.append(Clasificador.error(x.indicesTest,clasificacion))
     return np.mean(errores)
+
+class ClasificadorRegresionLineal(Clasificador):
+  def __init__(self):
+    super().__init__()
+
+  def entrenamiento(self,datostrain,atributosDiscretos,diccionario,nu, nepocas,Normalizar = True):
+    if Normalizar:
+      self.datostrain = (self.datostrain - np.mean(self.datostrain,0))/np.std(self.datostrain,0)
+    else:
+      self.datosTrain = datostrain
+    self.omega = zeros(len(self.datosTrain[1]))
+    for ie in range(nepocas):
+      for ejemplo in self.datosTrain:
+        self.omega = self.omega-nu*(self.sigmoidal(self.omega,ejemplo[:-1].insert(0,1)))
+    return
+
+  def sigmoidal(self,atributos,omega):
+    return 1/(1+np.exp(-sum([a*b for a,b in zip(atributos,omega)])))
+
+  def clasifica(self,datostest,atributosDiscretos,diccionario,Normalizar = True):
+    prediccion = []
+    if Normalizar:
+      self.datosTest = (self.datostest - np.mean(self.datostest,0))/np.std(self.datostest,0)
+    else:
+      self.datosTest = datostest
+    for ejemplo in prediccion:
+      if sigmoidal(self.omega, self.sigmoidal(self.omega,ejemplo[:-1].insert(0,1))) > 0.5:
+        prediccion.append(0)
+      else:
+        prediccion.append(1)
+    return prediccion
