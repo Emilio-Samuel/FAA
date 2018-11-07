@@ -194,7 +194,7 @@ class ClasificadorVecinosProximos(Clasificador):
     prob = 0
     for h in diccionario[-1]:
       print(h)
-      probaux = sum(clases == h)/K:
+      probaux = sum(clases == h)/K
       if prob < probaux:
         prob = probaux
         clase = h
