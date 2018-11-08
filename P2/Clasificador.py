@@ -226,28 +226,28 @@ class ClasificadorRegresionLineal(Clasificador):
     super().__init__()
 
   def entrenamiento(self,datostrain,atributosDiscretos,diccionario,nu, nepocas,Normalizar = True):
+    self.datosTrain = datostrain
     if Normalizar:
-      self.datostrain = (self.datostrain - np.mean(self.datostrain,0))/np.std(self.datostrain,0)
-    else:
-      self.datosTrain = datostrain
-    self.omega = zeros(len(self.datosTrain[1]))
+      self.datosTrain = (self.datosTrain - np.mean(self.datosTrain,0))/np.std(self.datosTrain,0)      
+    self.omega = list(np.zeros(len(self.datosTrain[1])))
     for ie in range(nepocas):
       for ejemplo in self.datosTrain:
-        self.omega = self.omega-nu*(self.sigmoidal(self.omega,ejemplo[:-1].insert(0,1)))
+        atributos = [1]+list(ejemplo[:-1])
+        self.omega = self.omega-nu*(self.sigmoidal(self.omega,atributos))
     return
 
-  def sigmoidal(self,atributos,omega):
-    return 1/(1+np.exp(-sum([a*b for a,b in zip(atributos,omega)])))
+  def sigmoidal(self,omega,atributos):
+    return 1/(1+np.exp(-sum([a*b for a,b in zip(omega,atributos)])))
 
   def clasifica(self,datostest,atributosDiscretos,diccionario,Normalizar = True):
     prediccion = []
+    self.datosTest = datostest
     if Normalizar:
-      self.datosTest = (self.datostest - np.mean(self.datostest,0))/np.std(self.datostest,0)
-    else:
-      self.datosTest = datostest
-    for ejemplo in prediccion:
-      if sigmoidal(self.omega, self.sigmoidal(self.omega,ejemplo[:-1].insert(0,1))) > 0.5:
-        prediccion.append(0)
+      self.datosTest = (self.datosTest - np.mean(self.datosTest,0))/np.std(self.datosTest,0)
+    for ejemplo in self.datosTest:
+      atributos = [1]+list(ejemplo[:-1])
+      if self.sigmoidal(self.omega,atributos) > 0.5:
+        prediccion.append(True)
       else:
-        prediccion.append(1)
+        prediccion.append(False)
     return prediccion
