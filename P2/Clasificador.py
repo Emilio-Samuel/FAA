@@ -258,35 +258,42 @@ class ClasificadorRegresionLineal(Clasificador):
 		super().__init__()
 
 	def entrenamiento(self,datostrain,atributosDiscretos,diccionario, nu, nepocas,Normalizar = True, MAP = False, a = 1):
-		datostestNorm = np.copy(datostrain)
+		datostrainNorm = np.copy(datostrain)
 		if Normalizar:
-			datostestNorm = self.normalizarDatos(datostestNorm)
-
-		[n,m] = datostestNorm.shape
-		datostestNorm = np.hstack((np.ones((n,1)),datostestNorm[:,:-1]))
+			datostrainNorm = self.normalizarDatos(datostrainNorm[:,:-1])
+			[n,m] = datostrainNorm.shape
+			datostrainNorm = np.hstack((np.ones((n,1)),datostrainNorm[:,:]))
+			[n,m] = datostrainNorm.shape
+		else:
+			[n,m] = datostrainNorm.shape
+			datostrainNorm = np.hstack((np.ones((n,1)),datostrainNorm[:,:-1]))
+			[n,m] = datostrainNorm.shape		
 
 		self.omega = np.zeros(m)
+		[n,m] = datostrain.shape
+
 		for _ in range(nepocas):
-			for ejemplo in datostestNorm:
-				aux = self.omega - nu*(self.sigmoidal(self.omega,ejemplo))
-				if MAP:
-					aux -= nu/(n*a**2)* self.omega
+			for i in range(n):
+				if datostrain[i,-1] == 1:
+					aux = self.omega - nu*(self.sigmoidal(datostrainNorm[i,:])-1)*datostrainNorm[i,:]
+				else:
+					aux = self.omega - nu*(self.sigmoidal(datostrainNorm[i,:]))*datostrainNorm[i,:]
 				self.omega = aux
 		return
 
-	def sigmoidal(self,omega,x):
-		
-		return 1./(1+ np.exp(sum(omega*x)))
+	def sigmoidal(self,x):
+		return 1./(1+ np.exp(-sum(self.omega*x)))
+
 	def clasifica(self,datostest,atributosDiscretos,diccionario,Normalizar = True):
-		
 		datostestNorm = np.copy(datostest)
 		if Normalizar:
 			datostestNorm = self.normalizarDatos(datostestNorm)
 		n = datostestNorm.shape[0]
-		datostestNorm = np.hstack((np.ones((n,1)),datostestNorm[:,:-1]))
+		datostestNorm = np.hstack((np.ones((n,1)),datostestNorm[:,:]))
 		prediccion = np.zeros(n)
+
 		for i in range(n):
-			if self.sigmoidal(self.omega,datostestNorm[i,:]) > 0.5:
-				prediccion[i] = datostest[i,-1]
+			if self.sigmoidal(datostestNorm[i,:]) > 0.5:
+				prediccion[i] = 1
 		return prediccion
 
