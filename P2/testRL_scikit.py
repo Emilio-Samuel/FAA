@@ -9,20 +9,10 @@ for i in range(len(datasets)):
     dataset = Datos(datasets[i])
 
     particiones = ValidacionSimple(n_particiones,0.1,dataset).creaParticiones(dataset.datos)   
-    errores = np.empty(n_particiones)
-    for j in range(n_particiones):
-        datosTrain = dataset.extraeDatos(particiones[j].indicesTrain)
-        datosTest = dataset.extraeDatos(particiones[j].indicesTest)
-        cRL =  ClasificadorRegresionLineal()
-        cRL.entrenamiento(datosTrain,dataset.nominalAtributos,dataset.diccionarios,1,100)
-        res = cRL.clasifica(datosTest,dataset.nominalAtributos,dataset.diccionarios)
 
-        error = Clasificador.error(datosTest,res)
-        errores[j] = error
-    print("Error del clasificador: "),
-    print(np.mean(errores))
-
-    cRLs = LogisticRegression(solver='lbfgs') #solver por defecto, se puede usar sag para resulatdos mas parecidos
+    datosTrain = dataset.extraeDatos(particiones[0].indicesTrain)
+    datosTest = dataset.extraeDatos(particiones[0].indicesTest)
+    cRLs = LogisticRegression(solver='lbfgs', max_iter=500) #solver por defecto, se puede usar sag para resulatdos mas parecidos
     cRLs.fit(datosTrain[:,:-1],datosTrain[:,-1])
     res = cRLs.predict(datosTest[:,:-1])
     error = Clasificador.error(datosTest,res)
