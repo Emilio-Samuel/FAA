@@ -4,7 +4,7 @@ from EstrategiaParticionado import *
 from sklearn.linear_model import LogisticRegression
 
 datasets = ["example1.data","example2.data","example3.data","example4.data","wdbc.data"]
-n_particiones = 20
+n_particiones = 1
 for i in range(len(datasets)):
     dataset = Datos(datasets[i])
 
@@ -19,6 +19,7 @@ for i in range(len(datasets)):
 
         error = Clasificador.error(datosTest,res)
         errores[j] = error
+    print("Error del clasificador: "),
     print(np.mean(errores))
 
     cRLs = LogisticRegression(solver='lbfgs') #solver por defecto, se puede usar sag para resulatdos mas parecidos
