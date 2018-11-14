@@ -177,7 +177,10 @@ class ClasificadorVecinosProximos(Clasificador):
 		self.datosTrain = np.copy(datostrain)
 		if not Normalizar:
 			return
-		self.datosTrain = self.normalizarDatos(datostrain)
+		self.datosTrain = self.normalizarDatos(datostrain[:,0:-1])
+		#print(self.datosTrain , )
+		self.datosTrain = np.hstack((self.datosTrain,datostrain[:,-1].reshape(-1,1)))
+		#print(self.datosTrain)
 		return
 	def clasifica(self,datostest,atributosDiscretos,diccionario,prob = False,K = 5,Normalizar = True):
 		#Suponemos que datostest viene normalizado si no  
@@ -188,6 +191,7 @@ class ClasificadorVecinosProximos(Clasificador):
 		for i in range(len(datostestNorm)):
 			for j in range(len(self.datosTrain)):
 				dists[i,j] = scipy.spatial.distance.euclidean(self.datosTrain[j,0:-1],datostestNorm[i,:])
+		#print(dists)
 		#dists = [scipy.spatial.distance.euclidean(self.datosTrain[i,0:-1],datostestNorm[:,0:-1]) for i in range(len(self.datosTrain))]
 		#print(dists)
 		res = np.empty(len(datostest))
@@ -203,7 +207,7 @@ class ClasificadorVecinosProximos(Clasificador):
 					pos = np.where(isMin == True)[0][0]
 					minimos[pos] = dists[i,j]
 					clases[pos] = self.datosTrain[j,-1]
-			
+			#print(clases)
 			res[i] = stats.mode(clases)[0][0]   
 			if prob:
 				for h in range(len(diccionario[-1])):
@@ -258,17 +262,21 @@ class ClasificadorRegresionLineal(Clasificador):
 		super().__init__()
 
 	def entrenamiento(self,datostrain,atributosDiscretos,diccionario, nu, nepocas,Normalizar = True, MAP = False, a = 1):
-		datostestNorm = np.copy(datostrain)
-		if Normalizar:
-			datostestNorm = self.normalizarDatos(datostestNorm)
+		datostrainNorm = np.copy(datostrain)
+		#print(datostrain)
+		if not Normalizar:
+			return
+		datostrainNorm = self.normalizarDatos(datostrain[:,0:-1])
+		#print(self.datosTrain , )
+		#datostestNorm = np.hstack((datostestNorm,datostrain[:,-1].reshape(-1,1)))
+		
+		[n,m] = datostrainNorm.shape
+		datostrainNorm = np.hstack((np.ones((n,1)),datostrainNorm))
 
-		[n,m] = datostestNorm.shape
-		datostestNorm = np.hstack((np.ones((n,1)),datostestNorm[:,:-1]))
-
-		self.omega = np.zeros(m)
+		self.omega = np.ones(m+1)
 		for _ in range(nepocas):
-			for ejemplo in datostestNorm:
-				aux = self.omega - nu*(self.sigmoidal(self.omega,ejemplo))
+			for i in range(n):
+				aux = self.omega - nu*(self.sigmoidal(self.omega,datostrainNorm[i,:]) - (datostrain[i,-1]))
 				if MAP:
 					aux -= nu/(n*a**2)* self.omega
 				self.omega = aux
@@ -276,17 +284,17 @@ class ClasificadorRegresionLineal(Clasificador):
 
 	def sigmoidal(self,omega,x):
 		
-		return 1./(1+ np.exp(sum(omega*x)))
+		return 1./(1+ np.exp(-1.*sum(omega*x)))
 	def clasifica(self,datostest,atributosDiscretos,diccionario,Normalizar = True):
 		
 		datostestNorm = np.copy(datostest)
 		if Normalizar:
 			datostestNorm = self.normalizarDatos(datostestNorm)
 		n = datostestNorm.shape[0]
-		datostestNorm = np.hstack((np.ones((n,1)),datostestNorm[:,:-1]))
+		datostestNorm = np.hstack((np.ones((n,1)),datostestNorm[:,:]))
 		prediccion = np.zeros(n)
 		for i in range(n):
-			if self.sigmoidal(self.omega,datostestNorm[i,:]) > 0.5:
-				prediccion[i] = datostest[i,-1]
+			if self.sigmoidal(self.omega,datostestNorm[i,:]) < 0.5:
+				prediccion[i] = 1
 		return prediccion
 
