@@ -28,6 +28,4 @@ for i in range(len(datasets)):
         plt.plot(dataset.datos[dataset.datos[:,-1]==1,0],  
          dataset.datos[dataset.datos[:,-1]==1,1],'ro')
         plt.show()
-        
-
     print(np.mean(errores))

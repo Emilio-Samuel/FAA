@@ -4,7 +4,7 @@ from EstrategiaParticionado import *
 from sklearn.neighbors import KNeighborsClassifier
 
 datasets = ["example1.data","example2.data","example3.data","example4.data","wdbc.data"]
-n_particiones = 20
+n_particiones = 1
 for i in range(len(datasets)):
     dataset = Datos(datasets[i])
 

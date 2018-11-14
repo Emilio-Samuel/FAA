@@ -9,25 +9,27 @@ n_particiones = 1
 for i in range(len(datasets)):
     dataset = Datos(datasets[i])
 
-    particiones = ValidacionSimple(n_particiones,0.1,dataset).creaParticiones(dataset.datos)   
+    particiones = ValidacionSimple(n_particiones,0.5,dataset).creaParticiones(dataset.datos)   
     errores = np.empty(n_particiones)
     for j in range(n_particiones):
         datosTrain = dataset.extraeDatos(particiones[j].indicesTrain)
         datosTest = dataset.extraeDatos(particiones[j].indicesTest)
         cKNN =  ClasificadorVecinosProximos()
         cKNN.entrenamiento(datosTrain,dataset.nominalAtributos,dataset.diccionarios)
-        res = cKNN.clasifica(datosTest[:,0:-1],dataset.nominalAtributos,dataset.diccionarios)
+        #res = cKNN.clasifica(datosTest[:,0:-1],dataset.nominalAtributos,dataset.diccionarios)
 
-        error = Clasificador.error(datosTest,res)
-        errores[j] = error
+        #error = Clasificador.error(datosTest,res)
+        #errores[j] = error
+        #"""
         plt.figure()
         plotModel(dataset.datos[particiones[j].indicesTrain,0],dataset.datos[particiones[j].indicesTrain,1],
                 dataset.datos[particiones[j].indicesTrain,-1] !=0, cKNN,"Frontera",dataset.diccionarios)
         plt.plot(dataset.datos[dataset.datos[:,-1]==0,0],  
-         dataset.datos[dataset.datos[:,-1]==0,1],'bo')
+         dataset.datos[dataset.datos[:,-1]==0,1],'ro')
         plt.plot(dataset.datos[dataset.datos[:,-1]==1,0],  
-         dataset.datos[dataset.datos[:,-1]==1,1],'ro')
+         dataset.datos[dataset.datos[:,-1]==1,1],'bo')
         plt.show()
+        #"""
     print(np.mean(errores))
 
 
