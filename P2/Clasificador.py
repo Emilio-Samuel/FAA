@@ -173,16 +173,21 @@ class ClasificadorNaiveBayes(Clasificador):
 class ClasificadorVecinosProximos(Clasificador):
 	def __init__(self):
 		super().__init__()
-	def entrenamiento(self,datostrain,atributosDiscretos,diccionario,Normalizar = True):
+	def entrenamiento(self,datostrain,atributosDiscretos,diccionario,Normalizar = True,weight ='uniform'):
 		self.datosTrain = np.copy(datostrain)
 		if not Normalizar:
 			return
 		self.datosTrain = self.normalizarDatos(datostrain[:,0:-1])
 		#print(self.datosTrain , )
 		self.datosTrain = np.hstack((self.datosTrain,datostrain[:,-1].reshape(-1,1)))
+		if weight == 'uniform':
+			self.w = False
+		else:
+			self.w = True
+
 		#print(self.datosTrain)
 		return
-	def clasifica(self,datostest,atributosDiscretos,diccionario,prob = False,K = 5,Normalizar = True):
+	def clasifica(self,datostest,atributosDiscretos,diccionario,K = 5,Normalizar = True,prob = False,):
 		#Suponemos que datostest viene normalizado si no  
 		datostestNorm = np.copy(datostest)
 		if Normalizar:
@@ -201,17 +206,22 @@ class ClasificadorVecinosProximos(Clasificador):
 			minimos = np.ones(K)
 			minimos *= float('inf')
 			clases = np.ones(K)
+			pesos = np.ones(K)
 			for j in range(len(self.datosTrain)):
 				isMin = minimos > dists[i,j]
 				if isMin.any():
 					pos = np.where(isMin == True)[0][0]
 					minimos[pos] = dists[i,j]
 					clases[pos] = self.datosTrain[j,-1]
-			#print(clases)
-			res[i] = stats.mode(clases)[0][0]   
-			if prob:
-				for h in range(len(diccionario[-1])):
-					probs[h,i] = sum(h == clases)/K
+					if self.w:
+						pesos[pos] = 1./dists[i,j]
+   
+			
+			for h in range(len(diccionario[-1])):
+				probs[h,i] = sum((h == clases)*pesos)/K
+		maximos = np.argmax(probs,0)#nos pone cual es la columna del maximo
+		for i in range(len(datostest)):
+			res[i] = 
 		return res
 
 	def validacion(self,particionado,dataset,clasificador,seed=None):
