@@ -273,38 +273,43 @@ class ClasificadorRegresionLineal(Clasificador):
 
 	def entrenamiento(self,datostrain,atributosDiscretos,diccionario, nu, nepocas,Normalizar = True, MAP = False, a = 1):
 		datostrainNorm = np.copy(datostrain)
-		#print(datostrain)
-		if not Normalizar:
-			return
-		datostrainNorm = self.normalizarDatos(datostrain[:,0:-1])
-		#print(self.datosTrain , )
-		#datostestNorm = np.hstack((datostestNorm,datostrain[:,-1].reshape(-1,1)))
-		
-		[n,m] = datostrainNorm.shape
-		datostrainNorm = np.hstack((np.ones((n,1)),datostrainNorm))
 
-		self.omega = np.ones(m+1)
+		if Normalizar:
+			datostrainNorm = self.normalizarDatos(datostrainNorm[:,:-1])
+			[n,m] = datostrainNorm.shape
+			datostrainNorm = np.hstack((np.ones((n,1)),datostrainNorm[:,:]))
+			[n,m] = datostrainNorm.shape
+		else:
+			[n,m] = datostrainNorm.shape
+			datostrainNorm = np.hstack((np.ones((n,1)),datostrainNorm[:,:-1]))
+			[n,m] = datostrainNorm.shape		
+
+		self.omega = np.zeros(m)
+		[n,m] = datostrain.shape
+
 		for _ in range(nepocas):
 			for i in range(n):
-				aux = self.omega - nu*(self.sigmoidal(self.omega,datostrainNorm[i,:]) - (datostrain[i,-1]))
-				if MAP:
-					aux -= nu/(n*a**2)* self.omega
+				if datostrain[i,-1] == 1:
+					aux = self.omega - nu*(self.sigmoidal(datostrainNorm[i,:])-1)*datostrainNorm[i,:]
+				else:
+					aux = self.omega - nu*(self.sigmoidal(datostrainNorm[i,:]))*datostrainNorm[i,:]
 				self.omega = aux
 		return
 
-	def sigmoidal(self,omega,x):
-		
-		return 1./(1+ np.exp(-1.*sum(omega*x)))
+	def sigmoidal(self,x):
+		return 1./(1+ np.exp(-sum(self.omega*x)))
+
+
 	def clasifica(self,datostest,atributosDiscretos,diccionario,Normalizar = True):
-		
 		datostestNorm = np.copy(datostest)
 		if Normalizar:
 			datostestNorm = self.normalizarDatos(datostestNorm)
 		n = datostestNorm.shape[0]
 		datostestNorm = np.hstack((np.ones((n,1)),datostestNorm[:,:]))
 		prediccion = np.zeros(n)
+
 		for i in range(n):
-			if self.sigmoidal(self.omega,datostestNorm[i,:]) < 0.5:
+			if self.sigmoidal(datostestNorm[i,:]) > 0.5:
 				prediccion[i] = 1
 		return prediccion
 
