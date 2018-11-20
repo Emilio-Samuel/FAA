@@ -9,7 +9,7 @@ n_particiones = 1
 for i in range(len(datasets)):
     dataset = Datos(datasets[i])
 
-    particiones = ValidacionSimple(n_particiones,0.5,dataset).creaParticiones(dataset.datos)   
+    particiones = ValidacionSimple(n_particiones,0.3,dataset).creaParticiones(dataset.datos)   
     errores = np.empty(n_particiones)
     for j in range(n_particiones):
         datosTrain = dataset.extraeDatos(particiones[j].indicesTrain)
@@ -29,7 +29,5 @@ for i in range(len(datasets)):
         plt.plot(dataset.datos[dataset.datos[:,-1]==1,0],  
          dataset.datos[dataset.datos[:,-1]==1,1],'bo')
         plt.show()
-        #"""
-    print(np.mean(errores))
 
 

@@ -190,18 +190,17 @@ class ClasificadorVecinosProximos(Clasificador):
 	def clasifica(self,datostest,atributosDiscretos,diccionario,K = 5,Normalizar = True,prob = False,):
 		#Suponemos que datostest viene normalizado si no  
 		datostestNorm = np.copy(datostest)
+		res = np.empty(len(datostest))
+		probs = np.empty((len(diccionario[-1]),len(datostest)))
+		
 		if Normalizar:
 			datostestNorm = self.normalizarDatos(datostestNorm)
 		dists = np.empty((len(datostestNorm),len(self.datosTrain)))
 		for i in range(len(datostestNorm)):
 			for j in range(len(self.datosTrain)):
 				dists[i,j] = scipy.spatial.distance.euclidean(self.datosTrain[j,0:-1],datostestNorm[i,:])
-		#print(dists)
-		#dists = [scipy.spatial.distance.euclidean(self.datosTrain[i,0:-1],datostestNorm[:,0:-1]) for i in range(len(self.datosTrain))]
-		#print(dists)
-		res = np.empty(len(datostest))
-		if prob:
-			probs = np.empty((len(diccionario[-1]),len(datostest)))
+		
+		
 		for i in range(len(datostest)):
 			minimos = np.ones(K)
 			minimos *= float('inf')
@@ -220,8 +219,10 @@ class ClasificadorVecinosProximos(Clasificador):
 			for h in range(len(diccionario[-1])):
 				probs[h,i] = sum((h == clases)*pesos)/K
 		maximos = np.argmax(probs,0)#nos pone cual es la columna del maximo
-		for i in range(len(datostest)):
-			res[i] = 
+		for i in range(len(datostest)):#escogemos la clase ganadora
+			res[i] = maximos[i]
+		if prob:
+			return probs
 		return res
 
 	def validacion(self,particionado,dataset,clasificador,seed=None):
