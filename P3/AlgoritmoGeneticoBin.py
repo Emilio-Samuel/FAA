@@ -116,18 +116,10 @@ class ClasificadorAGB(Clasificador):
 		
 
 	def Mutacion(self,elem):
-<<<<<<< HEAD
 		mutar = np.random.randint(0,1)
 		if mutar > self.probabilidad_mutacion:
 			self.elem.pop()
-=======
-		mutaciones = np.random.rand(len(elem))
-		for i in range(len(elem)-1):
-			if mutaciones[i] < self.probabilidad_mutacion:
-				elem[i] = np.random.randint(0,self.K+1,1)[0]
-		if mutaciones[-1] < self.probabilidad_mutacion:
-			elem[-1] = int(not elem[-1])
->>>>>>> 44fbfd6bc93c996f6872d93d7ff7ffab9517e413
+
 		return elem
 
 	def discretizar_elemento(self,elem):
