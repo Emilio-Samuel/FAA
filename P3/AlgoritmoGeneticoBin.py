@@ -14,25 +14,18 @@ class ClasificadorAGB(Clasificador):
 	def generar_poblacion(self,nhip):
 		poblacion=[]
 		for cromosoma in range(self.tamano_poblacion):
-			individuo = list(np.random.randint(0,self.natributos*2^(self.K+1)-1,self.natributos))
-				for j in len(individuo):
-					individuo[j]=np.asarray([int(d) for d in str(bin(individuo[j]))[2:]])
+			individuo = []
+			num_reglas = np.random.randint(1,4)
+			regla = []
+			for i in range(num_reglas):
+				for j in range(self.natributos):
+					rangos=np.random.randint(0,2**(self.K+1)-1)
+					valoresAtrib = np.asarray([int(d) for d in np.binary_repr(rangos, width=self.K+1)])
+					regla.append(valoresAtrib)
+				regla.append(np.random.randint(0,2))
+				individuo.append(regla)
 			poblacion.append(individuo)
 		return poblacion
-
-	def fitness(self,datosTrain,elem):
-		aciertos = 0
-		for dato in datosTrain:
-			salida = self.discretizar_elemento(dato)
-			flag = False
-			for regla in elem:
-				if((salida == regla).all() or ((salida[:-1] != regla[:-1]).any() and salida[-1] != regla[-1])):
-					flag = True
-					break
-			if flag:
-				aciertos +=1
-				
-		return aciertos * 1./len(datosTrain)
 
 
 	def fitness(self,datosTrain,elem):
@@ -48,37 +41,37 @@ class ClasificadorAGB(Clasificador):
 				#Me guardo la clase
 				clase = regla[-1]
 				#Compruebo para cada atributo del ejemplo
-				for atributo in salida
+				for i in range(self.natributos):
 					#Obtenemos los intervalos aceptados
-					opciones = np.array(np.where(regla == 1)).ravel()
-					opciones = opciones +1
+					opciones = np.array(np.where(np.asarray(regla[i]) == 1)).ravel()
 					#Si el ejemplo tiene la misma clase que nuestro cromosoma
 					if salida[-1]==clase:
 						#Y se cumple que algun atributo del ejemplo esta en el rango valido
-						flag = np.any(opciones==atributo)
+						flag = np.any(opciones==salida[i])
 					if flag:
 						#Aumentamos su fitness y pasamos al siguiente ejemplo
 						aciertos +=1
 						break
 				if flag:
 					break
-			if flag:
-				break	
+
+		print(aciertos)
 		return aciertos * 1./len(datosTrain)
 
 	def entrenamiento(self,datosTrain,atributosDiscretos,diccionario):
 
 		self.natributos = datosTrain.shape[1] -1
 		self.K = np.floor(1+ 3.322*np.log10(len(datosTrain)))
+		self.K = self.K.astype(np.int64)
 		atributos_continuos = [e for  e,x in enumerate(1- np.array(atributosDiscretos)) if x == 1]
 		self.maximos = np.max(datosTrain[:,atributos_continuos],0)
 		self.minimos = np.min(datosTrain[:,atributos_continuos],0)
 		self.A = (self.maximos - self.minimos)/self.K
 		self.poblacion = self.generar_poblacion(len(diccionario[-1]))
-		self.fitness_poblacion = np.zeros(self.tamano_poblacion)
-		#print(self.poblacion)
+		self.fitness_poblacion = []
 		for i in range(self.tamano_poblacion):
-			self.fitness_poblacion[i] = self.fitness(datosTrain,self.poblacion[i])
+			self.fitness_poblacion.append(self.fitness(datosTrain,self.poblacion[i])) 
+		print(self.fitness_poblacion)
 
 		while(self.generaciones > 0 and np.max(self.fitness_poblacion) < self.max_fitness):
 			self.poblacion = self.seleccion_progenitores()
@@ -136,6 +129,8 @@ class ClasificadorAGB(Clasificador):
 		elementos_mantener = int(np.floor(-1* self.proporcion_elitismo* len(self.poblacion)))
 		#print(elementos_mantener)
 		posiciones = np.argsort(self.fitness_poblacion)
+
+		print(posiciones)
 		poblacion = np.copy(self.poblacion[posiciones[elementos_mantener:]])
 
 		probabilidades = np.cumsum(self.fitness_poblacion)/np.sum(self.fitness_poblacion)
