@@ -2,7 +2,7 @@ import numpy as np
 from Clasificador import *
 #SOLO 1 PARTICION!
 class ClasificadorAGB(Clasificador):
-	def __init__(self,tamano_poblacion = 50,probabilidad_recombinacion=0.1,probabilidad_mutacion=0.001,proporcion_elitismo=0.05,generaciones=1):
+	def __init__(self,tamano_poblacion = 50,probabilidad_recombinacion=0.1,probabilidad_mutacion=0.001,proporcion_elitismo=0.05,generaciones=5):
 
 		self.tamano_poblacion = tamano_poblacion
 		self.proporcion_elitismo = proporcion_elitismo
@@ -12,18 +12,24 @@ class ClasificadorAGB(Clasificador):
 		self.generaciones = generaciones
 
 	def generar_poblacion(self,nhip):
+		#Inicializamos una poblacion vacia
 		poblacion=[]
+		#Creamos un individuo
 		for cromosoma in range(self.tamano_poblacion):
 			individuo = []
+			#Inicialmente un individuo tiene entre 1 y 10 reglas
 			num_reglas = np.random.randint(1,10)
 			regla = []
 			for i in range(num_reglas):
 				for j in range(self.natributos):
+					#Para cada atributo de la regla creamos un array binario
 					rangos=np.random.randint(0,2**(self.K+1)-1)
 					valoresAtrib = np.asarray([int(d) for d in np.binary_repr(rangos, width=self.K+1)])
 					regla.append(valoresAtrib)
+				#Le annadimos una clase aleatoria y metemos la regla en nuestro individuo
 				regla.append(np.random.randint(0,2))
 				individuo.append(regla)
+			#Lo annadimos a la poblacion
 			poblacion.append(individuo)
 		return poblacion
 
@@ -45,11 +51,12 @@ class ClasificadorAGB(Clasificador):
 				for i in range(self.natributos):
 					#Obtenemos los intervalos aceptados
 					opciones = np.array(np.where(np.asarray(regla[i]) == 1)).ravel()
+					opciones = opciones +1
 					#Si el ejemplo tiene la misma clase que nuestro cromosoma
 					if salida[-1]==clase:
 						#Y se cumple que algun atributo del ejemplo esta en el rango valido
 						flag = np.any(opciones==salida[i])
-					if flag:
+					if flag==True:
 						#Aumentamos su fitness y pasamos al siguiente ejemplo
 						aciertos +=1
 						flag = False
@@ -96,23 +103,27 @@ class ClasificadorAGB(Clasificador):
 
 			
 	def clasifica(self,datostest,atributosDiscretos,diccionario):
+		#Tasa de acierto de nuestro cromosoma
 		clasifica=0
+		#Mejor regla y su fitness
+		best_rule=(0,0)
+		#Fitness de la regla actual
+		actual_rule=0
 		for dato in datostest:
 			salida = self.discretizar_elemento(dato)
-			for regla in self.regla:
-				flag = True
+			for j in range(len(self.regla)):
 				for i in range(self.natributos):
-					if regla[-1] != salida[-1]:
-						flag = False
-						break
-					#Obtenemos los intervalos aceptados
-					opciones = np.array(np.where(np.asarray(regla[i]) == 1)).ravel()
-					flag = np.any(opciones==salida[i])
-					if flag == False:
-						break
-				if flag == True:
-					clasifica += 1
-					break
+
+					opciones = np.array(np.where(np.asarray(self.regla[j][i]) == 1)).ravel()
+					opciones = opciones +1
+					if np.any(opciones==salida[i])==True:
+						actual_rule+=1
+				if best_rule[1] < actual_rule:
+					best_rule = (j, actual_rule)
+			if self.regla[best_rule[0]][-1] == salida[-1]:
+				clasifica+=1
+				
+
 		return clasifica/len(datostest)
 
 
@@ -131,7 +142,7 @@ class ClasificadorAGB(Clasificador):
 	def Mutacion(self,elem):
 		mutar = np.random.randint(0,1)
 		if mutar > self.probabilidad_mutacion:
-			self.elem.pop()
+			self.elem.reverse()
 
 		return elem
 
