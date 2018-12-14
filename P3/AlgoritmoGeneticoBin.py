@@ -2,7 +2,7 @@ import numpy as np
 from Clasificador import *
 #SOLO 1 PARTICION!
 class ClasificadorAGB(Clasificador):
-	def __init__(self,tamano_poblacion = 50,probabilidad_recombinacion=0.1,probabilidad_mutacion=0.001,proporcion_elitismo=0.05,generaciones=5):
+	def __init__(self,tamano_poblacion = 50,probabilidad_recombinacion=0.4,probabilidad_mutacion=0.8,proporcion_elitismo=0.01,generaciones=10):
 
 		self.tamano_poblacion = tamano_poblacion
 		self.proporcion_elitismo = proporcion_elitismo
@@ -14,17 +14,19 @@ class ClasificadorAGB(Clasificador):
 	def generar_poblacion(self,nhip):
 		#Inicializamos una poblacion vacia
 		poblacion=[]
-		#Creamos un individuo
+		aux = []		#Creamos un individuo
 		for cromosoma in range(self.tamano_poblacion):
 			individuo = []
+			cabezon = []
 			#Inicialmente un individuo tiene entre 1 y 10 reglas
-			num_reglas = np.random.randint(1,10)
-			regla = []
+			num_reglas = np.random.randint(1,20)
 			for i in range(num_reglas):
+				regla = []
 				for j in range(self.natributos):
 					#Para cada atributo de la regla creamos un array binario
-					rangos=np.random.randint(0,2**(self.K+1)-1)
-					valoresAtrib = np.asarray([int(d) for d in np.binary_repr(rangos, width=self.K+1)])
+					n= np.random.randint(0,3)
+					rangos = 2**(self.K-1)-1
+					valoresAtrib = np.random.permutation(np.asarray([int(d) for d in np.binary_repr(rangos, width=self.K)]))
 					regla.append(valoresAtrib)
 				#Le annadimos una clase aleatoria y metemos la regla en nuestro individuo
 				regla.append(np.random.randint(0,2))
@@ -37,44 +39,54 @@ class ClasificadorAGB(Clasificador):
 	def fitness(self,datosTrain,elem):
 		aciertos = 0
 		num_reglas = len(elem)
+		
 		#Para cada dato de entrenamiento
 		for dato in datosTrain:
 			#Hallo el intevalo al que pertenece cada atributo y annado la clase al final
 			salida = self.discretizar_elemento(dato)
-			#Inicializo una flag que me dirá si mi cromosoma es valido para este ejemplo
-			flag = False
-			#Para cada regla de mi cromosoma
 			for regla in elem:
-				#Me guardo la clase
-				clase = regla[-1]
-				#Compruebo para cada atributo del ejemplo
-				for i in range(self.natributos):
-					#Obtenemos los intervalos aceptados
-					opciones = np.array(np.where(np.asarray(regla[i]) == 1)).ravel()
-					opciones = opciones +1
-					#Si el ejemplo tiene la misma clase que nuestro cromosoma
-					if salida[-1]==clase:
-						#Y se cumple que algun atributo del ejemplo esta en el rango valido
-						flag = np.any(opciones==salida[i])
-					if flag==True:
-						#Aumentamos su fitness y pasamos al siguiente ejemplo
-						aciertos +=1
+				flag = True
+				for atributo in range(self.natributos):
+					opciones = np.array(np.where(np.asarray(regla[atributo]) == 1)).ravel()
+					if list(opciones)==[]:
+						continue
+					if not np.any(opciones == salida[atributo]):
 						flag = False
-		return aciertos
+						break
+				if flag == True and salida[-1]==regla[-1]:
+					aciertos+=1
+					break
+				if flag == False and salida[-1]==0:
+					aciertos+=1
+					break
+
+		return aciertos*1./len(datosTrain)
+
+
+
+
+
+
+
 
 	def entrenamiento(self,datosTrain,atributosDiscretos,diccionario):
 
-		self.natributos = datosTrain.shape[1] -1
+		self.natributos = max(datosTrain.shape[1] -12,2)
 		self.K = np.floor(1+ 3.322*np.log10(len(datosTrain)))
 		self.K = self.K.astype(np.int64)
+		print(self.K)
 		atributos_continuos = [e for  e,x in enumerate(1- np.array(atributosDiscretos)) if x == 1]
 		self.maximos = np.max(datosTrain[:,atributos_continuos],0)
 		self.minimos = np.min(datosTrain[:,atributos_continuos],0)
 		self.A = (self.maximos - self.minimos)/self.K
 		self.poblacion = self.generar_poblacion(len(diccionario[-1]))
+
 		self.fitness_poblacion = []
 		for i in range(self.tamano_poblacion):
-			self.fitness_poblacion.append(self.fitness(datosTrain,self.poblacion[i])) 
+			sd=self.fitness(datosTrain,self.poblacion[i])
+			print(sd)
+			self.fitness_poblacion.append(sd) 
+
 		#print(self.fitness_poblacion)
 
 		while(self.generaciones > 0 ):#and max(self.fitness_poblacion)<self.max_fitness):
@@ -84,7 +96,9 @@ class ClasificadorAGB(Clasificador):
 			for i in range(self.tamano_poblacion - 1):
 				#print(self.poblacion[i])
 				#print(self.poblacion[i])
-				[self.poblacion[i], self.poblacion[i+1]] = self.Cruce(self.poblacion[i], self.poblacion[i+1])
+				uno = np.random.randint(0,self.tamano_poblacion)
+				dos = np.random.randint(0,self.tamano_poblacion)
+				[self.poblacion[uno], self.poblacion[dos]] = self.Cruce(self.poblacion[i], self.poblacion[i+1])
 				i += 1
 			print("mutacion")
 			for i in range(self.tamano_poblacion):
@@ -103,28 +117,7 @@ class ClasificadorAGB(Clasificador):
 
 			
 	def clasifica(self,datostest,atributosDiscretos,diccionario):
-		#Tasa de acierto de nuestro cromosoma
-		clasifica=0
-		#Mejor regla y su fitness
-		best_rule=(0,0)
-		#Fitness de la regla actual
-		actual_rule=0
-		for dato in datostest:
-			salida = self.discretizar_elemento(dato)
-			for j in range(len(self.regla)):
-				for i in range(self.natributos):
-
-					opciones = np.array(np.where(np.asarray(self.regla[j][i]) == 1)).ravel()
-					opciones = opciones +1
-					if np.any(opciones==salida[i])==True:
-						actual_rule+=1
-				if best_rule[1] < actual_rule:
-					best_rule = (j, actual_rule)
-			if self.regla[best_rule[0]][-1] == salida[-1]:
-				clasifica+=1
-				
-
-		return clasifica/len(datostest)
+		return self.fitness(datostest,self.regla)
 
 
 
@@ -135,14 +128,22 @@ class ClasificadorAGB(Clasificador):
 			return [elem1,elem2]
 
 		n = np.random.randint(1,max(len(elem1),len(elem2)))
+		'''for regla in range(min(len(elem1),len(elem2))):
+			for atrib in range(self.natributos):
+				i = np.random.randint(0,self.K)
+				aux = elem2[regla][atrib]
+				ev=elem1[regla][atrib][0:i]
+				asa=elem2[regla][atrib][i:]
+				elem1[regla][atrib] = np.concatenate((elem2[regla][atrib][0:i],elem1[regla][atrib][i:]))
 
+				elem2[regla][atrib] = np.concatenate((aux[0:i],elem2[regla][atrib][i:]))'''
 		return elem1[0:n]+elem2[n:], elem2[0:n]+elem1[n:]
 		
 
 	def Mutacion(self,elem):
 		mutar = np.random.randint(0,1)
 		if mutar > self.probabilidad_mutacion:
-			self.elem.reverse()
+			self.elem[np.random.randint(0,len(elem))].reverse()
 
 		return elem
 
@@ -157,15 +158,26 @@ class ClasificadorAGB(Clasificador):
 
 
 	def seleccion_progenitores(self):
-
 		aux = []
+		aux2=0
 		poblacion = []
-		probabilidades = np.cumsum(self.fitness_poblacion)/np.sum(self.fitness_poblacion)
+		'''
+		elementos_mantener = int(np.floor(-1* self.proporcion_elitismo* len(self.poblacion)))
+		#print(elementos_mantener)
+		posiciones = np.argsort(self.fitness_poblacion)
+		
+		for pos in posiciones:
+			poblacion.append(self.poblacion[pos])
+'''
+
+		probabilidades = np.divide(self.fitness_poblacion,np.sum(self.fitness_poblacion))
+		print(self.fitness_poblacion)
 
 		for i in range(len(probabilidades)):
 			aux.append([self.poblacion]*int(np.floor(probabilidades[i]*100)))
 
-		for a in range(len(self.poblacion)):
-			poblacion.append(np.random.choice(self.poblacion))
+		for w in range(len(self.poblacion)):
+			aux2 = np.random.randint(0,len(aux))
+			poblacion.append(self.poblacion[aux2])
 
 		return poblacion
