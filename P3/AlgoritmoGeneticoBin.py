@@ -6,7 +6,7 @@ from Clasificador import *
 #200 individuos-100 generaciones
 #200 individuos-200 generaciones
 class ClasificadorAGB(Clasificador):
-	def __init__(self,tamano_poblacion = 50,probabilidad_recombinacion=0.6,probabilidad_mutacion=1.5,proporcion_elitismo=0.01,generaciones=20, max_fitness = 0.99):
+	def __init__(self,tamano_poblacion = 50,probabilidad_recombinacion=0.4,probabilidad_mutacion=0.99,proporcion_elitismo=0.01,generaciones=20, max_fitness = 0.99):
 
 		self.tamano_poblacion = tamano_poblacion
 		self.proporcion_elitismo = proporcion_elitismo
@@ -27,9 +27,8 @@ class ClasificadorAGB(Clasificador):
 				regla = []
 				for j in range(self.natributos):
 					#Para cada atributo de la regla creamos un array binario
-					n= np.random.randint(0,9)
-					rangos = np.random.randint(0,2**(self.K-n)-1)
-					rangos = 2 ** (self.K - 1) - 1
+					n= np.random.randint(0,2)
+					rangos = 2**(self.K-1)-1
 					valoresAtrib = np.random.permutation(np.asarray([int(d) for d in np.binary_repr(rangos, width=self.K)]))
 					regla.append(valoresAtrib)
 				#Le annadimos una clase aleatoria y metemos la regla en nuestro individuo
@@ -134,15 +133,21 @@ class ClasificadorAGB(Clasificador):
 		
 
 	def Mutacion(self,elem):
+		flag = False
 		for i in range(len(elem)):
 			for j in range(len(elem[i])-1):
 				for k in range(len(elem[i][j])):
 					if np.random.rand(1)[0]>self.probabilidad_mutacion:
+						flag = True
 						if elem[i][j][k]==1:
 							elem[i][j][k] =0
 						else:
 							elem[i][j][k] = 1
 						break
+				if flag == True:
+					break
+			if flag == True:
+				break
 
 		return elem
 
