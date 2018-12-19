@@ -14,6 +14,7 @@ class ClasificadorAG(Clasificador):
 		self.generaciones = generaciones
 		self.mejora = 0
 		self.tiempo_sin_mejora = 0
+		self.Generacion = None
 
 	def generar_poblacion(self,nhip,cota_reglas = 50):
 		poblacion = []
@@ -46,7 +47,7 @@ class ClasificadorAG(Clasificador):
 				
 		return aciertos * 1./len(datosTrain)
 
-	def entrenamiento(self,datosTrain,atributosDiscretos,diccionario):
+	def entrenamiento(self,datosTrain,atributosDiscretos,diccionario,verbose=False):
 
 		self.natributos = datosTrain.shape[1] -1
 		self.K = np.floor(1+ 3.322*np.log10(len(datosTrain)))
@@ -60,7 +61,7 @@ class ClasificadorAG(Clasificador):
 		for i in range(self.tamano_poblacion):
 			self.fitness_poblacion[i] = self.fitness(datosTrain,self.poblacion[i])
 
-		while(self.generaciones > 0 and np.max(self.fitness_poblacion) < self.max_fitness and self.tiempo_sin_mejora < 10):
+		while(self.generaciones > 0 and np.max(self.fitness_poblacion) < self.max_fitness and self.tiempo_sin_mejora < 15):
 			self.poblacion = self.seleccion_progenitores()
 			self.tamano_poblacion = len(self.poblacion)
 			for i in range(self.tamano_poblacion - 1):
@@ -87,6 +88,15 @@ class ClasificadorAG(Clasificador):
 			else:
 				self.tiempo_sin_mejora += 1
 			print(self.generaciones,mejora,end="\r")
+			if verbose:
+				if self.Generacion is None:
+					self.Generacion = self.generaciones
+					self.Mejores = self.mejora
+					self.fitness_medio = np.sum(self.fitness_poblacion)*1./self.tamano_poblacion
+				else:
+					self.Generacion = np.hstack((self.Generacion,self.generaciones))
+					self.Mejores = np.hstack((self.Mejores,self.mejora))
+					self.fitness_medio = np.hstack((self.fitness_medio,np.sum(self.fitness_poblacion)*1./self.tamano_poblacion))
 
 		n_ganador = np.argsort(self.fitness_poblacion)[-1]
 		self.regla = self.poblacion[n_ganador]

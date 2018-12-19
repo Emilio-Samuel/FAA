@@ -6,7 +6,7 @@ from Clasificador import *
 #200 individuos-100 generaciones
 #200 individuos-200 generaciones
 class ClasificadorAGB(Clasificador):
-	def __init__(self,tamano_poblacion = 50,probabilidad_recombinacion=0.6,probabilidad_mutacion=1.5,proporcion_elitismo=0.01,generaciones=20, max_fitness = 0.99):
+	def __init__(self,tamano_poblacion = 100,probabilidad_recombinacion=0.6,probabilidad_mutacion=0.5,proporcion_elitismo=0.01,generaciones=20, max_fitness = 0.99):
 
 		self.tamano_poblacion = tamano_poblacion
 		self.proporcion_elitismo = proporcion_elitismo
@@ -85,11 +85,11 @@ class ClasificadorAGB(Clasificador):
 
 		while(self.generaciones > 0 and max(self.fitness_poblacion)<self.max_fitness):
 			ruleta = []
-			print("seleccion")
+			#print("seleccion")
 			self.poblacion=self.seleccion_progenitores(datosTrain)
 
-			print(self.fitness(datosTrain, self.poblacion[0]))
-			print("cruce")
+			#print(self.fitness(datosTrain, self.poblacion[0]))
+			#print("cruce")
 
 			for i in range(self.tamano_poblacion):
 				self.fitness_poblacion[i] = self.fitness(datosTrain, self.poblacion[i])
@@ -105,11 +105,12 @@ class ClasificadorAGB(Clasificador):
 				dos = np.random.randint(0,len(aux))
 				[self.poblacion[i], self.poblacion[i+1]] = self.Cruce(aux[uno], aux[dos])
 				i += 1
-			print("mutacion")
+			#print("mutacion")
 			for i in range(self.tamano_poblacion):
 				self.poblacion[i] = self.Mutacion(self.poblacion[i])
 
 			self.generaciones -= 1
+			print(self.generaciones*1./20,end="\r")
 
 		n_ganador = np.argsort(self.fitness_poblacion)[-1]
 		self.regla = self.poblacion[n_ganador]
@@ -173,8 +174,8 @@ class ClasificadorAGB(Clasificador):
 
 		probabilidades = np.divide(self.fitness_poblacion,np.sum(self.fitness_poblacion))
 
-		print(self.fitness_poblacion)
-		print(probabilidades)
+		#print(self.fitness_poblacion)
+		#print(probabilidades)
 
 		for i in range(len(probabilidades)):
 			for aa in range(int(np.floor(probabilidades[i]*100))):
