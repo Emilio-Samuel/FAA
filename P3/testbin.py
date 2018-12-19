@@ -2,7 +2,7 @@ from Datos import *
 from Clasificador import *
 from EstrategiaParticionado import *
 from AlgoritmoGeneticoBin import *
-dataset = Datos("wdbc.data")
+dataset = Datos("example4.data")
 alg = ClasificadorAGB()
 particiones = ValidacionBootstrap(1,0.1,dataset).creaParticiones(dataset.datos) 
 for j in range(1):
