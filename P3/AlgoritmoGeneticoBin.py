@@ -8,7 +8,7 @@ import copy
 #200 individuos-100 generaciones
 #200 individuos-200 generaciones
 class ClasificadorAGB(Clasificador):
-	def __init__(self,tamano_poblacion = 50,probabilidad_recombinacion=0.7,probabilidad_mutacion=0.30,proporcion_elitismo=0.05,generaciones=100, max_fitness = 0.99):
+	def __init__(self,tamano_poblacion = 50,probabilidad_recombinacion=0.7,probabilidad_mutacion=0.3,proporcion_elitismo=0.05,generaciones=100, max_fitness = 0.99):
 
 		self.tamano_poblacion = tamano_poblacion
 		self.proporcion_elitismo = proporcion_elitismo
@@ -52,6 +52,7 @@ class ClasificadorAGB(Clasificador):
 			#Hallo el intevalo al que pertenece cada atributo y annado la clase al final
 			salida = self.discretizar_elemento(dato)
 			flag = False
+			clase = []
 			for regla in elem:
 				flag_atributos = True
 				for atributo in range(self.natributos):
@@ -62,12 +63,12 @@ class ClasificadorAGB(Clasificador):
 					if not np.any(opciones == salida[atributo]):
 						flag_atributos = False
 						break
-				if flag_atributos == True and salida[-1]==regla[-1]:
-					aciertos+=1
-					flag = True
-					break
-			if flag == False and salida[-1]== self.priori:
-				aciertos+=1
+				if flag_atributos == True:
+					clase.append(regla[-1])
+			if len(clase) == 0:
+				clase.append(self.priori)
+			if mode(clase)[0][0] == salida[-1]:
+				aciertos += 1
 
 		return aciertos*1./len(datosTrain)
 
@@ -90,7 +91,7 @@ class ClasificadorAGB(Clasificador):
 			sd=self.fitness(datosTrain,self.poblacion[i])
 			self.fitness_poblacion.append(sd) 
 
-		while(self.generaciones > 0 and max(self.fitness_poblacion)<self.max_fitness and self.tiempo_sin_mejora < 15):
+		while(self.generaciones > 0 and max(self.fitness_poblacion)<self.max_fitness and self.tiempo_sin_mejora < 25):
 			ruleta = []
 			#print("seleccion")
 			self.poblacion=self.seleccion_progenitores(datosTrain)
@@ -154,10 +155,11 @@ class ClasificadorAGB(Clasificador):
 	def clasifica(self,datostest,atributosDiscretos,diccionario):
 		num_reglas = len(self.regla)
 		clasificacion = []
+		#aciertos = 0;
 		for dato in datostest:
 			#Hallo el intevalo al que pertenece cada atributo y annado la clase al final
 			salida = self.discretizar_elemento(dato)
-			flag = False
+			clase = []
 			for regla in self.regla:
 				flag_atributos = True
 				for atributo in range(self.natributos):
@@ -168,11 +170,10 @@ class ClasificadorAGB(Clasificador):
 						flag_atributos = False
 						break
 				if flag_atributos == True:
-					clasificacion.append(regla[-1])
-					flag = True
-					break
-			if flag == False :
-				clasificacion.append(self.priori)
+					clase.append(regla[-1])
+			if len(clase) == 0:
+				clase.append(self.priori)
+			clasificacion.append(mode(clase)[0][0])
 		return np.array(clasificacion)
 
 

@@ -5,7 +5,7 @@ from AlgoritmoGeneticoBin import *
 
 from plotModel import plotModel 
 import matplotlib.pyplot as plt 
-dataset = Datos("example3.data")
+dataset = Datos("example1.data")
 alg = ClasificadorAGB()
 particiones = ValidacionSimple(1,0.6,dataset).creaParticiones(dataset.datos) 
 for j in range(1):
