@@ -8,7 +8,7 @@ import copy
 #200 individuos-100 generaciones
 #200 individuos-200 generaciones
 class ClasificadorAGB(Clasificador):
-	def __init__(self,tamano_poblacion = 50,probabilidad_recombinacion=0.7,probabilidad_mutacion=0.3,proporcion_elitismo=0.05,generaciones=100, max_fitness = 0.99):
+	def __init__(self,tamano_poblacion = 50,probabilidad_recombinacion=0.2,probabilidad_mutacion=0.8,proporcion_elitismo=0.05,generaciones=100, max_fitness = 0.99):
 
 		self.tamano_poblacion = tamano_poblacion
 		self.proporcion_elitismo = proporcion_elitismo

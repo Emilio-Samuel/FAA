@@ -7,7 +7,7 @@ from plotModel import plotModel
 import matplotlib.pyplot as plt 
 dataset = Datos("example1.data")
 alg = ClasificadorAGB()
-particiones = ValidacionSimple(1,0.6,dataset).creaParticiones(dataset.datos) 
+particiones = ValidacionBootstrap(1,0.6,dataset).creaParticiones(dataset.datos) 
 for j in range(1):
   datosTrain = dataset.extraeDatos(particiones[j].indicesTrain)
   datosTest = dataset.extraeDatos(particiones[j].indicesTest)
